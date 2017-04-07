@@ -26,7 +26,7 @@ init(Params) ->
                    host = proplists:get_value(host, Params, "localhost"),
                    port = proplists:get_value(port, Params, 27017),
                    database = proplists:get_value(database, Params, log),
-                   collection = proplists:get_value(collection, Params),
+                   collection = to_binary(proplists:get_value(collection, Params)),
                    formatter = proplists:get_value(formatter, Params, lager_mongo_default_formatter)},
     #state{host = H, port = P, database = D} = State,
     {ok, C} = mc_worker_api:connect([{host, H}, {port, P}, {database, D}]),
@@ -58,3 +58,8 @@ terminate(_Reason, #state{connection = C}) -> mc_worker_api:disconnect(C).
 
 -spec(code_change(any(), State::#state{}, any()) -> {ok, #state{}}).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
+
+to_binary(B) when is_binary(B) -> B;
+to_binary(S) when is_list(S) -> list_to_binary(S);
+to_binary(A) when is_atom(A) -> atom_to_binary(A, utf8);
+to_binary(_) -> <<>>.
