@@ -12,6 +12,11 @@ format(Message) ->
     {<<"level">>, lager_msg:severity(Message),
      <<"time">>, M * 1000000 + S,
      <<"node">>, node(),
-     <<"msg">>, list_to_binary(lager_msg:message(Message)),
-     <<"_module">>, atom_to_binary(proplists:get_value(module, Metadata), latin1),
+     <<"msg">>, to_binary(lager_msg:message(Message)),
+     <<"_module">>, to_binary(proplists:get_value(module, Metadata)),
      <<"_line">>, proplists:get_value(line, Metadata, 0)}.
+
+to_binary(B) when is_binary(B) -> B;
+to_binary(S) when is_list(S) -> list_to_binary(S);
+to_binary(A) when is_atom(A) -> atom_to_binary(A, utf8);
+to_binary(_) -> <<>>.
