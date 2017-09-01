@@ -22,15 +22,17 @@
 -spec init(proplists:proplist()) -> {ok, #state{}} | {error, atom()}.
 init(Params) ->
     {ok, _} = application:ensure_all_started(mongodb),
-    State = #state{level = proplists:get_value(level, Params, info),
-                   host = proplists:get_value(host, Params, "localhost"),
-                   port = proplists:get_value(port, Params, 27017),
-                   database = proplists:get_value(database, Params, log),
-                   collection = to_binary(proplists:get_value(collection, Params)),
-                   formatter = proplists:get_value(formatter, Params, lager_mongo_default_formatter)},
-    #state{host = H, port = P, database = D} = State,
-    {ok, C} = mc_worker_api:connect([{host, H}, {port, P}, {database, D}]),
-    {ok, State#state{connection = C}}.
+    Host = proplists:get_value(host, Params, "localhost"),
+    Port = proplists:get_value(port, Params, 27017),
+    DB = proplists:get_value(database, Params, log),
+    {ok, C} = mc_worker_api:connect([{host, Host}, {port, Port}, {database, DB}, {w_mode, unsafe}]),
+    {ok, #state{level = proplists:get_value(level, Params, info),
+                host = Host,
+                port = Port,
+                database = DB,
+                collection = to_binary(proplists:get_value(collection, Params)),
+                connection = C,
+                formatter = proplists:get_value(formatter, Params, lager_mongo_default_formatter)}}.
 
 handle_event({log, Message}, #state{level = L} = State) ->
     lager_util:is_loggable(Message, L, ?MODULE) andalso
