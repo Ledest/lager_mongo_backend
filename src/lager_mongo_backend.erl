@@ -11,7 +11,7 @@
          terminate/2,
          code_change/3]).
 
--record(state, {level = info :: lager:log_level(),
+-record(state, {level = lager_util:config_to_mask(info) :: {mask, non_neg_integer()},
                 host = "localhost" :: string(),
                 port = 2017 :: pos_integer(),
                 database = log :: atom()|binary(),
@@ -26,7 +26,7 @@ init(Params) ->
     Port = proplists:get_value(port, Params, 27017),
     DB = proplists:get_value(database, Params, log),
     {ok, C} = mc_worker_api:connect([{host, Host}, {port, Port}, {database, DB}, {w_mode, unsafe}]),
-    {ok, #state{level = proplists:get_value(level, Params, info),
+    {ok, #state{level = lager_util:config_to_mask(proplists:get_value(level, Params, info)),
                 host = Host,
                 port = Port,
                 database = DB,
